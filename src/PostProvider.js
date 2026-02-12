@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { faker } from "@faker-js/faker";
 
 function createRandomPost() {
@@ -8,12 +8,11 @@ function createRandomPost() {
   };
 }
 const PostContext = createContext();
-function PostProvider() {
+function PostProvider({ children }) {
   const [posts, setPosts] = useState(() =>
     Array.from({ length: 30 }, () => createRandomPost()),
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFakeDark, setIsFakeDark] = useState(false);
 
   // Derived state. These are the posts that will actually be displayed
   const searchedPosts =
@@ -32,4 +31,27 @@ function PostProvider() {
   function handleClearPosts() {
     setPosts([]);
   }
+
+  return (
+    <PostContext.Provider
+      value={{
+        posts: searchedPosts,
+        onClearPosts: handleClearPosts,
+        onAddPost: handleAddPost,
+        searchQuery,
+        setSearchQuery,
+      }}
+    >
+      {children}
+    </PostContext.Provider>
+  );
 }
+
+function usePosts() {
+  const context = useContext(PostContext);
+  if (context === undefined)
+    throw new Error("usePosts must be used within a PostProvider");
+  return context;
+}
+
+export { PostProvider, usePosts };
